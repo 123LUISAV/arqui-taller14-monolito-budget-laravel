@@ -1,0 +1,22 @@
+flowchart TB
+    U(["<b>Usuario</b><br/>[Persona]<br/>Registra ingresos, gastos,<br/>presupuestos y deudas"])
+    API(["<b>Cliente de la API</b><br/>[Persona / software]<br/>Usa /api/* con cabecera api-key"])
+
+    S["<b>Budget</b><br/>[Sistema de software]<br/>Aplicación web monolítica Laravel<br/>para el control de finanzas personales"]
+
+    SMTP["<b>Servidor SMTP</b><br/>[Sistema externo]<br/>Correo de verificación, reseteo<br/>de contraseña e informe semanal"]
+    FX["<b>currency-api (jsDelivr)</b><br/>[Sistema externo]<br/>Tasas de conversión de monedas"]
+    CDN["<b>CDN de recursos web</b><br/>[Sistema externo]<br/>Font Awesome, Google Fonts, Chartist"]
+
+    U -->|"Usa mediante navegador<br/>[HTTP/HTML]"| S
+    API -->|"Consulta y crea transacciones<br/>[HTTP/JSON]"| S
+    S -->|"Envía correos<br/>[SMTP]"| SMTP
+    S -->|"Descarga tasas diarias<br/>[HTTPS/JSON]"| FX
+    U -.->|"El navegador descarga<br/>fuentes, iconos y gráficos"| CDN
+
+    classDef persona fill:#08427b,stroke:#052e56,color:#fff
+    classDef sistema fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef externo fill:#999,stroke:#6b6b6b,color:#fff
+    class U,API persona
+    class S sistema
+    class SMTP,FX,CDN externo

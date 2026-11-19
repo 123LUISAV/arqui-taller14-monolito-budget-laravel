@@ -1,0 +1,66 @@
+flowchart TB
+    NAV(["Navegador / Cliente API"])
+
+    subgraph APP["Contenedor: Aplicación monolítica Laravel (app/, routes/, resources/)"]
+        direction TB
+        RT["<b>Rutas</b><br/>routes/web.php (92 rutas en total)<br/>routes/api.php"]
+
+        subgraph MW["Middlewares (app/Http/Middleware, Kernel)"]
+            direction LR
+            M1["Grupo web: EncryptCookies,<br/>StartSession, VerifyCsrfToken"]
+            M2["auth / guest<br/>RedirectIfAuthenticated"]
+            M3["SetLocale<br/>RefreshSpaceRelations"]
+            M4["ResolveApiKey<br/>(solo /api)"]
+        end
+
+        subgraph PRES["Capa de presentación"]
+            direction LR
+            CW["<b>Controladores web</b> (app/Http/Controllers)<br/>Dashboard, Transaction, Spending, Earning,<br/>Tag, Budget, Debt, Report, Import, Settings, Space"]
+            CA["<b>Controladores API</b><br/>app/Http/Controllers/Api"]
+            LW["<b>Componentes Livewire</b><br/>WidgetList, WidgetWizard"]
+            V["<b>Vistas</b><br/>resources/views (Blade, 70 archivos)<br/>resources/assets/js (Vue 2)"]
+        end
+
+        subgraph NEG["Lógica de aplicación y negocio"]
+            direction LR
+            FR["<b>Form Requests y Policies</b><br/>DebtRequest, DebtDetailRequest,<br/>SpendingPolicy, TagPolicy..."]
+            ACT["<b>Actions</b> (9)<br/>CreateUserAction, CreateSpaceAction..."]
+            REP["<b>Repositorios</b> (15)<br/>SpendingRepository, BudgetRepository,<br/>DashboardRepository, ORMDebtRepository"]
+            EV["<b>Eventos</b> (8)<br/>TransactionCreated, TagCreated...<br/>registran Activity"]
+            JB["<b>Jobs y Mail</b><br/>ProcessRecurrings, FetchConversionRates,<br/>SendWeeklyReports, VerifyRegistration"]
+        end
+
+        subgraph DAT["Capa de datos"]
+            MO["<b>Modelos Eloquent</b> (18)<br/>User, Space, Spending, Earning, Tag,<br/>Budget, Debt, Widget, Activity..."]
+        end
+    end
+
+    DB[("MySQL / MariaDB")]
+    EXT["SMTP y currency-api"]
+
+    NAV -->|HTTP| RT
+    RT --> MW
+    MW --> CW
+    MW --> CA
+    MW --> LW
+    CW --> V
+    LW --> V
+    CW --> FR
+    CW --> REP
+    CW --> ACT
+    CA --> REP
+    LW --> MO
+    REP --> MO
+    ACT --> MO
+    CW -.->|"consultas directas<br/>(Tag::query, Debt::query)"| MO
+    MO -->|"dispatchesEvents"| EV
+    EV --> MO
+    JB --> REP
+    JB --> MO
+    MO --> DB
+    JB --> EXT
+
+    classDef comp fill:#85bbf0,stroke:#5d82a8,color:#000
+    classDef ext fill:#999,stroke:#6b6b6b,color:#fff
+    class RT,M1,M2,M3,M4,CW,CA,LW,V,FR,ACT,REP,EV,JB,MO comp
+    class DB,EXT ext

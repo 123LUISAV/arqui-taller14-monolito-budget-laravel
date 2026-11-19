@@ -1,0 +1,35 @@
+flowchart TB
+    U(["<b>Usuario</b><br/>[Persona]"])
+    API(["<b>Cliente de la API</b><br/>[Software]"])
+
+    subgraph SIS["Sistema Budget (unidad de despliegue única)"]
+        direction TB
+        NAV["<b>Navegador web</b><br/>[Contenedor: JavaScript]<br/>HTML de Blade + Vue 2 (TransactionWizard,<br/>DatePicker, ColorPicker) + Livewire.js + Chartist"]
+        APP["<b>Aplicación monolítica Laravel</b><br/>[Contenedor: PHP 8.2, Laravel 10, Livewire 2]<br/>Rutas, middlewares, controladores,<br/>repositorios, acciones, modelos Eloquent, vistas Blade"]
+        JOB["<b>Planificador y cola</b><br/>[Contenedor: php artisan schedule:run / queue:work]<br/>ProcessRecurrings, FetchConversionRates,<br/>SendWeeklyReports (mismo código base)"]
+        DB[("<b>Base de datos</b><br/>[Contenedor: MySQL 8 (dump) · MariaDB 10.4 (local)]<br/>23 tablas: users, spaces, spendings,<br/>earnings, tags, budgets, debts, jobs...")]
+        FS[("<b>Almacenamiento de archivos</b><br/>[Sistema de archivos: storage/app]<br/>CSV importados, avatares, adjuntos")]
+    end
+
+    SMTP["<b>Servidor SMTP</b><br/>[Externo]"]
+    FX["<b>currency-api (jsDelivr)</b><br/>[Externo]"]
+    CDN["<b>CDN de recursos web</b><br/>[Externo]"]
+
+    U -->|"Interactúa<br/>[HTTP]"| NAV
+    NAV -->|"Peticiones GET/POST, Axios y<br/>/livewire/message [HTTP, sesión + CSRF]"| APP
+    API -->|"/api/* [HTTP/JSON, api-key]"| APP
+    APP -->|"Lee y escribe<br/>[PDO / Eloquent]"| DB
+    APP -->|"Guarda y lee archivos<br/>[Storage]"| FS
+    APP -->|"Encola jobs<br/>[tabla jobs]"| DB
+    JOB -->|"Lee la cola y los datos<br/>[PDO]"| DB
+    JOB -->|"Envía correos<br/>[SMTP]"| SMTP
+    JOB -->|"GET tasas<br/>[HTTPS]"| FX
+    APP -->|"Correo de verificación y reseteo<br/>[SMTP]"| SMTP
+    NAV -.->|"Carga recursos"| CDN
+
+    classDef persona fill:#08427b,stroke:#052e56,color:#fff
+    classDef cont fill:#438dd5,stroke:#2e6295,color:#fff
+    classDef externo fill:#999,stroke:#6b6b6b,color:#fff
+    class U,API persona
+    class NAV,APP,JOB,DB,FS cont
+    class SMTP,FX,CDN externo
